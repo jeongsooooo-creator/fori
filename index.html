@@ -126,7 +126,7 @@
         }
 
         .meaning { font-size: 1.05rem; font-weight: bold; color: #2f3640; line-height: 1.35; margin-bottom: 4px; word-break: keep-all; }
-        .source { font-size: 0.78rem; color: #95a5a6; }
+        .source { font-size: 0.8rem; color: #8e44ad; font-weight: bold; }
         
         .slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 16px; }
         .slot { 
@@ -180,7 +180,7 @@
         .card-wrapper:active .tooltip,
         .card-wrapper:hover .tooltip { visibility: visible; opacity: 1; }
         
-        #message { font-weight: bold; margin-bottom: 10px; min-height: 2.2em; font-size: 0.95rem; color: #7f8c8d; line-height: 1.3; }
+        #message { font-weight: bold; margin-bottom: 10px; min-height: 2.5em; font-size: 0.92rem; color: #7f8c8d; line-height: 1.4; word-break: keep-all; }
         
         .btn-next { 
             width: 100%; padding: 13px; background: var(--accent-color); color: white;
@@ -397,16 +397,17 @@
         allQuizData = rawData.map(item => {
             const hanja = item[0];
             const read = item[1];
-            const infoChars = item[2].split('/');
+            const infoCharsStr = item[2]; // "맺을 결/놈 자/풀 해/갈 지"
             const meaning = item[3];
             const source = item[4];
             const level = item[5];
             
+            const infoChars = infoCharsStr.split('/');
             const info = [];
             for(let i = 0; i < 4; i++) {
                 info.push([hanja[i] || "", infoChars[i] || ""]);
             }
-            return { hanja, info, meaning, read, source: `출처: ${source}`, level };
+            return { hanja, info, meaning, read, infoCharsStr, source: `📚 출처: ${source}`, level };
         });
         currentFilteredData = [...allQuizData];
     } catch(e) {
@@ -574,19 +575,18 @@
         if (selectedHanja === quiz.hanja) {
             correctCount++;
             document.getElementById('correct-count').innerText = correctCount;
-            msg.innerHTML = `<span style="color:var(--success-color)">✨ 정답: ${quiz.read}</span><br>완벽합니다! (획순 쓰는 중...)`;
+            msg.innerHTML = `<span style="color:var(--success-color)">✨ 정답: ${quiz.read}</span><br><span style="font-size:0.82rem; color:#444;">(${quiz.infoCharsStr})</span>`;
             
             for(let i=0; i<4; i++) {
                 document.getElementById(`slot-${i}`).style.borderBottomColor = "var(--success-color)";
             }
             
             await animateHanja(quiz.hanja, '#27ae60');
-            msg.innerHTML = `<span style="color:var(--success-color)">✨ 정답: ${quiz.read}</span><br>완벽합니다!`;
 
         } else {
             wrongCount++;
             document.getElementById('wrong-count').innerText = wrongCount;
-            msg.innerHTML = `<span style="color:var(--error-color)">❌ 오답입니다.</span><br>정답: ${quiz.hanja} (${quiz.read})`;
+            msg.innerHTML = `<span style="color:var(--error-color)">❌ 오답입니다!</span><br>정답: ${quiz.hanja} (${quiz.read})<br><span style="font-size:0.82rem; color:#444;">(${quiz.infoCharsStr})</span>`;
             
             for(let i=0; i<4; i++) {
                 const s = document.getElementById(`slot-${i}`);
@@ -595,7 +595,6 @@
             }
 
             setTimeout(async () => {
-                msg.innerHTML = `<span style="color:var(--error-color)">❌ 정답 획순 보기</span><br>정답: ${quiz.hanja} (${quiz.read})`;
                 await animateHanja(quiz.hanja, '#e74c3c');
             }, 500);
         }
