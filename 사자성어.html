@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>사자성어 마스터 퀴즈</title>
+
+    <!-- 카카오톡 미리보기(OG 메타 태그) 및 fori.png 지정 -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="🏯 사자성어 마스터 퀴즈">
+    <meta property="og:description" content="한자 획순 애니메이션과 함께 즐기는 사자성어 퀴즈!">
+    <meta property="og:image" content="https://jeongsooooo-creator.github.io/fori/fori.png">
+    <meta property="og:image:width" content="800">
+    <meta property="og:image:height" content="400">
+
+    <!-- 서예/붓글씨 느낌을 완벽히 통일해주는 구글 Noto Serif KR 폰트 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@600;900&display=swap" rel="stylesheet">
+
+    <!-- Hanzi Writer 라이브러리 -->
+    <script src="https://cdn.jsdelivr.net/npm/hanzi-writer@3.5/dist/hanzi-writer.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #8e44ad;
+            --success-color: #27ae60;
+            --error-color: #e74c3c;
+            --bg-color: #fdfaf6;
+            --brush-font: 'Noto Serif KR', 'Songti SC', 'Batang', 'Gungsuh', serif;
+        }
+
+        * { box-sizing: border-box; }
+
+        body { 
+            font-family: 'Malgun Gothic', -apple-system, BlinkMacSystemFont, sans-serif; 
+            background-color: var(--bg-color); 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            margin: 0; padding: 12px; touch-action: manipulation;
+            min-height: 100vh;
+        }
+
+        #game-box { 
+            background: #fff; padding: 18px; border-radius: 16px; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06); 
+            text-align: center; width: 100%; max-width: 420px;
+            border: 1px solid #eee;
+        }
+
+        .header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 12px; border-bottom: 1px solid #f0f0f0; padding-bottom: 8px;
+        }
+        
+        h1 { font-size: 1.15rem; color: var(--primary-color); margin: 0; }
+
+        .score-board { display: flex; gap: 8px; font-size: 0.85rem; font-weight: bold; }
+        .score-correct { color: var(--success-color); }
+        .score-wrong { color: var(--error-color); }
+        
+        .meaning-box {
+            background: #f8f9fa; border-left: 4px solid var(--accent-color);
+            padding: 12px; margin: 12px 0; text-align: left; min-height: 75px;
+            display: flex; flex-direction: column; justify-content: center;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .meaning { font-size: 0.98rem; font-weight: bold; color: #2f3640; line-height: 1.35; margin-bottom: 4px; }
+        .source { font-size: 0.75rem; color: #95a5a6; }
+        
+        .slots { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 18px; }
+        .slot { 
+            border-bottom: 3px solid #ddd; height: 60px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.2rem; color: #2c3e50;
+            font-family: var(--brush-font);
+            font-weight: 900;
+            background: #fafafa; border-radius: 4px 4px 0 0;
+            position: relative; overflow: hidden;
+        }
+        
+        .slot svg {
+            width: 52px !important;
+            height: 52px !important;
+        }
+
+        .cards { display: flex; justify-content: center; gap: 8px; margin-bottom: 15px; flex-wrap: wrap; }
+        .card-wrapper { position: relative; }
+        .card { 
+            width: 60px; height: 60px; background: var(--primary-color); color: white;
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            font-size: 1.9rem; 
+            font-family: var(--brush-font);
+            font-weight: 900;
+            cursor: pointer; box-shadow: 0 4px 0 #1a252f;
+            user-select: none; -webkit-user-select: none;
+        }
+        .card:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #1a252f;
+        }
+
+        .tooltip { 
+            position: absolute; bottom: 105%; left: 50%; transform: translateX(-50%);
+            background: #34495e; color: white; padding: 3px 6px; border-radius: 4px;
+            font-size: 0.7rem; white-space: nowrap; visibility: hidden; opacity: 0;
+            transition: opacity 0.2s; z-index: 10; pointer-events: none;
+        }
+        .card-wrapper:active .tooltip,
+        .card-wrapper:hover .tooltip { visibility: visible; opacity: 1; }
+        
+        #message { font-weight: bold; margin-bottom: 12px; min-height: 2.2em; font-size: 0.9rem; color: #7f8c8d; line-height: 1.3; }
+        
+        .btn-next { 
+            width: 100%; padding: 13px; background: var(--accent-color); color: white;
+            border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer;
+            box-shadow: 0 3px 0 #6c3483;
+        }
+        .btn-next:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 #6c3483;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-box">
+    <div class="header">
+        <h1>🏯 사자성어 퀴즈</h1>
+        <div class="score-board">
+            <span class="score-correct">⭕ 맞음: <span id="correct-count">0</span></span>
+            <span class="score-wrong">❌ 틀림: <span id="wrong-count">0</span></span>
+        </div>
+    </div>
+    
+    <div class="meaning-box">
+        <div class="meaning" id="meaning">불러오는 중...</div>
+        <div class="source" id="source">출처 대기 중</div>
+    </div>
+    
+    <div id="message">순서대로 한자를 선택하세요.</div>
+
+    <div class="slots">
+        <div class="slot" id="slot-0"></div>
+        <div class="slot" id="slot-1"></div>
+        <div class="slot" id="slot-2"></div>
+        <div class="slot" id="slot-3"></div>
+    </div>
+
+    <div id="cards" class="cards"></div>
+    
+    <button class="btn-next" onclick="nextQuiz()">다음 성어 도전</button>
+</div>
+
+<script>
+    const rawData = [
+        ["結者解之", "결자해지", "맺을 결/놈 자/풀 해/갈 지", "일을 저지른 사람이 그 일을 해결해야 함", "순오지"],
+        ["過猶不及", "과유불급", "지날 과/오히려 유/아니 불/미칠 급", "지나친 것은 미치지 못한 것과 같음", "논어"],
+        ["多多益善", "다다익선", "많을 다/많을 다/더할 익/착할 선", "많으면 많을수록 더욱 좋음", "사기"],
+        ["龍頭蛇尾", "용두사미", "용 용/머리 두/뱀 사/꼬리 미", "시작은 거창하나 끝이 흐지부지함", "전등록"],
+        ["四面楚歌", "사면초가", "넉 사/낯 면/나라 초/노래 가", "사방이 적에게 둘러싸여 고립된 상태", "사기"],
+        ["大器晩成", "대기만성", "클 대/그릇 기/늦을 만/이룰 성", "큰 인물은 늦게 성취됨", "노자"],
+        ["溫故知新", "온고지신", "익힐 온/옛 고/알 지/새 신", "옛 것을 익혀 새 것을 앎", "논어"],
+        ["切磋琢磨", "절차탁마", "끊을 절/갈 차/쪼을 탁/갈 마", "학문과 인격을 끊임없이 닦음", "시경"],
+        ["漁父之利", "어부지리", "고기잡을 어/아비 부/갈 지/이로울 리", "제삼자가 이득을 봄", "전국책"],
+        ["臥薪嘗膽", "와신상담", "누울 와/섶나무 신/맛볼 상/쓸개 담", "원수를 갚기 위해 고난을 견딤", "사기"],
+        ["靑出於藍", "청출어람", "푸를 청/날 출/어조사 어/쪽 람", "제자가 스승보다 나음", "순자"],
+        ["指鹿爲馬", "지록위마", "가리킬 지/사슴 록/할 위/말 마", "윗사람을 속여 권세를 휘두름", "사기"],
+        ["刻舟求劍", "각주구검", "새길 각/배 주/구할 구/칼 검", "어리석고 융통성이 없음", "여씨춘추"],
+        ["破竹之勢", "파죽지세", "깨뜨릴 파/대 죽/갈 지/형세 세", "막을 수 없는 맹렬한 기세", "진서"],
+        ["苦盡甘來", "고진감래", "쓸 고/다할 진/달 감/올 래", "고생 끝에 즐거움이 옴", "명심보감"],
+        ["馬耳東風", "마이동풍", "말 마/귀 이/동녘 동/바람 풍", "남의 말을 귀담아듣지 않음", "이백의 시"],
+        ["一石二鳥", "일석이조", "한 일/돌 석/두 이/새 조", "한 가지 일로 두 가지 이득을 봄", "서양 격언"],
+        ["千載一遇", "천재일우", "일천 천/실을 재/한 일/만날 우", "좀처럼 만나기 어려운 기회", "삼국지"],
+        ["畫龍點睛", "화룡점정", "그릴 화/용 용/점 점/눈동자 정", "중요한 부분을 끝내어 완성함", "수형기"],
+        ["九死一生", "구사일생", "아홉 구/죽을 사/한 일/날 생", "죽을 고비를 넘기고 겨우 살아남", "초사"],
+        ["錦上添花", "금상첨화", "비단 금/위 상/더할 첨/꽃 화", "좋은 일 위에 더 좋은 일이 더해짐", "왕안석의 시"],
+        ["孟母三遷", "맹모삼천", "맏 맹/어미 모/석 삼/옮길 천", "교육을 위해 환경이 중요함", "열녀전"],
+        ["明鏡止水", "명경지수", "밝을 명/거울 경/그칠 지/물 수", "맑고 깨끗한 마음의 상태", "장자"],
+        ["百折不撓", "백절불굴", "일백 백/꺾을 절/아니 불/굽힐 굴", "백 번 꺾여도 굽히지 않음", "한서"],
+        ["事必歸正", "사필귀정", "일 사/반드시 필/돌아갈 귀/바를 정", "모든 일은 결국 바른 길로 돌아감", "격언"],
+        ["三顧草廬", "삼고초려", "석 삼/돌아볼 고/풀 초/농막 로", "인재를 얻기 위해 정성을 다함", "삼국지"],
+        ["殺身成仁", "살신성인", "죽일 살/몸 신/이룰 성/어질 인", "자기 몸을 희생하여 인을 이룸", "논어"],
+        ["雪上加霜", "설상가상", "눈 설/위 상/더할 가/서리 상", "어려운 일 위에 또 어려운 일이 겹침", "전등록"],
+        ["愚公移山", "우공이산", "어리석을 우/할아비 공/옮길 이/메 산", "포기하지 않고 노력하면 결국 성공함", "열자"],
+        ["以心傳心", "이심전심", "써 이/마음 심/전할 전/마음 심", "말하지 않아도 마음으로 통함", "전등록"],
+        ["因果應報", "인과응보", "인할 인/열매 과/응할 응/갚을 보", "행한 대로 결과를 받음", "불교 경전"],
+        ["竹馬故友", "죽마고우", "대 죽/말 마/옛 고/벗 우", "어릴 때부터 같이 놀던 친구", "진서"],
+        ["進退兩難", "진퇴양난", "나아갈 진/물러날 퇴/두 양/어려울 난", "나아갈 수도 물러날 수도 없는 궁지", "시경"],
+        ["初志一貫", "초지일관", "처음 초/뜻 지/한 일/꿸 관", "처음 품은 뜻을 끝까지 밀고 나감", "격언"],
+        ["他山之石", "타산지석", "다를 타/메 산/갈 지/돌 석", "남의 잘못도 나에게는 교훈이 됨", "시경"],
+        ["風前燈火", "풍전등화", "바람 풍/앞 전/등잔 등/불 화", "매우 위태로운 처지", "고사성어"],
+        ["螢雪之功", "형설지공", "개똥벌레 형/눈 설/갈 지/공 공", "어려운 환경에서 공부하여 이룬 성과", "진서"],
+        ["浩然之氣", "호연지기", "넓을 호/그럴 연/갈 지/기운 기", "굽히지 않는 넓고 큰 기운", "맹자"],
+        ["弘益人間", "홍익인간", "넓을 홍/더할 익/사람 인/사이 간", "널리 인간 세상을 이롭게 함", "삼국유사"],
+        ["畫蛇添足", "화사첨족", "그릴 화/뱀 사/더할 첨/발 족", "쓸데없는 일을 덧붙여 망침", "전국책"],
+        ["換骨奪胎", "환골탈태", "바꿀 환/뼈 골/빼앗을 탈/아이밸 태", "낡은 것을 바꿔 새롭게 태어남", "혜홍 시론"],
+        ["結草報恩", "결초보은", "맺을 결/풀 초/갚을 보/은혜 은", "죽어서도 은혜를 잊지 않고 갚음", "좌전"],
+        ["刮目相對", "괄목상대", "비빌 괄/눈 목/서로 상/대할 대", "학식이 놀랍게 향상됨", "삼국지"],
+        ["群鷄一鶴", "군계일학", "무리 군/닭 계/한 일/학 학", "평범한 사람들 중 뛰어난 한 사람", "진서"],
+        ["同病相憐", "동병상련", "한가지 동/병 병/서로 상/불쌍히 여길 련", "같은 처지의 사람끼리 서로 동정함", "오월춘추"],
+        ["萬事亨通", "만사형통", "일만 만/일 사/형통할 형/통할 통", "모든 일이 뜻대로 잘 풀림", "역경"],
+        ["背水之陣", "배수지진", "등 배/물 수/갈 지/진칠 진", "죽을 각오로 일에 임함", "사기"],
+        ["百聞不如一見", "백문불여일견", "일백 백/들을 문/아니 불/같을 여/한 일/볼 견", "백 번 듣는 것보다 한 번 보는 게 나음", "한서"],
+        ["改過遷善", "개과천선", "고칠 개/허물 과/옮길 천/착할 선", "지난날의 잘못을 고치고 착하게 됨", "진서"],
+        ["牽強附會", "견강부회", "끌 견/강할 강/붙을 부/모일 회", "이치에 맞지 않는 말을 억지로 끌어다 맞춤", "고사성어"],
+        ["巧言令色", "교언영색", "공교할 교/말씀 언/하려할 영/빛 색", "교묘한 말과 아첨하는 얼굴빛", "논어"],
+        ["近墨者黑", "근묵자흑", "가까울 근/먹 묵/놈 자/검을 흑", "나쁜 사람과 가까이하면 나쁘게 됨", "신증동국여지승람"],
+        ["同床異夢", "동상이몽", "한가지 동/평상 상/다를 이/꿈 꿈", "같은 처지에서 서로 다른 생각을 함", "후한서"],
+        ["明若觀火", "명약관화", "밝을 명/같을 약/볼 관/불 화", "불을 보듯 사실이 아주 명백함", "서경"],
+        ["虛心坦懷", "허심탄회", "빌 허/마음 심/평평할 탄/품을 회", "마음을 비우고 생각을 솔직하게 털어놓음", "고사성어"],
+        ["桑田碧海", "상전벽해", "뽕나무 상/밭 전/푸를 벽/바다 해", "세상이 몰라보게 변함", "신선전"],
+        ["塞翁之馬", "새옹지마", "변방 새/늙은이 옹/갈 지/말 마", "인생의 길흉화복은 예측하기 어려움", "회남자"],
+        ["先見之明", "선견지명", "먼저 선/볼 견/갈 지/밝을 명", "앞일을 미리 내다보는 밝은 지혜", "후한서"],
+        ["水魚之交", "수어지교", "물 수/고기 어/갈 지/사귈 교", "물이 없으면 살 수 없는 물고기처럼 아주 친밀한 관계", "삼국지"],
+        ["我田引水", "아전인수", "나 아/밭 전/끌 인/물 수", "자기에게만 이롭게 행동함", "속담"],
+        ["眼下無人", "안하무인", "눈 목/아래 하/없을 무/사람 인", "태도가 교만하여 남을 업신여김", "고사성어"],
+        ["易地思之", "역지사지", "바꿀 역/땅 지/생각할 사/갈 지", "입장을 바꾸어 생각해 봄", "맹자"],
+        ["緣木求魚", "연목구어", "인연 연/나무 목/구할 구/고기 어", "도저히 불가능한 일을 하려 함", "맹자"],
+        ["吳越同舟", "오월동주", "나라 오/나라 월/한가지 동/배 주", "적대 관계에 있는 사람들이 같은 처지에 놓임", "손자"],
+        ["外柔內剛", "외유내강", "바깥 외/부드러울 유/안 내/강할 강", "겉으로는 부드러우나 속은 강함", "진서"]
+    ];
+
+    let quizData = [];
+    try {
+        quizData = rawData.map(item => {
+            const hanja = item[0];
+            const read = item[1];
+            const infoChars = item[2].split('/');
+            const meaning = item[3];
+            const source = item[4];
+            
+            const info = [];
+            for(let i = 0; i < 4; i++) {
+                info.push([hanja[i] || "", infoChars[i] || ""]);
+            }
+            return { hanja, info, meaning, read, source: `출처: ${source}` };
+        });
+    } catch(e) {
+        console.error("Data error:", e);
+    }
+
+    let currentIdx = -1;
+    let selectedHanja = "";
+    let correctCount = 0;
+    let wrongCount = 0;
+    let isAnswered = false;
+
+    function nextQuiz() {
+        if (!quizData || quizData.length === 0) return;
+
+        let nextIdx;
+        do { nextIdx = Math.floor(Math.random() * quizData.length); } while (nextIdx === currentIdx && quizData.length > 1);
+        currentIdx = nextIdx;
+        const quiz = quizData[currentIdx];
+        selectedHanja = "";
+        isAnswered = false;
+        
+        document.getElementById('meaning').innerText = quiz.meaning;
+        document.getElementById('source').innerText = "출처 확인을 위해 정답을 맞춰보세요!";
+        document.getElementById('message').innerText = "순서대로 한자를 선택하세요.";
+        document.getElementById('message').style.color = "#7f8c8d";
+        
+        for(let i=0; i<4; i++) {
+            const slot = document.getElementById(`slot-${i}`);
+            slot.innerHTML = "";
+            slot.style.color = "#2c3e50"; 
+            slot.style.borderBottomColor = "#ddd"; 
+        }
+
+        const shuffledInfo = [...quiz.info].sort(() => Math.random() - 0.5);
+        const cardContainer = document.getElementById('cards');
+        cardContainer.innerHTML = "";
+        
+        shuffledInfo.forEach(item => {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'card-wrapper';
+            
+            const tooltip = document.createElement('div');
+            tooltip.className = 'tooltip';
+            tooltip.innerText = item[1]; 
+            
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerText = item[0]; 
+            card.onclick = () => selectCard(card, item[0]);
+            
+            wrapper.appendChild(tooltip);
+            wrapper.appendChild(card);
+            cardContainer.appendChild(wrapper);
+        });
+    }
+
+    function selectCard(cardElement, char) {
+        if (selectedHanja.length >= 4 || isAnswered) return;
+        const currentSlot = document.getElementById(`slot-${selectedHanja.length}`);
+        currentSlot.innerHTML = `<span style="font-family: var(--brush-font); font-weight: 900;">${char}</span>`;
+        selectedHanja += char;
+        cardElement.style.visibility = 'hidden';
+
+        if (selectedHanja.length === 4) checkAnswer();
+    }
+
+    function animateSingleChar(slotId, char, strokeColor) {
+        return new Promise((resolve) => {
+            const slotEl = document.getElementById(slotId);
+            slotEl.innerHTML = "";
+
+            const renderBrushText = () => {
+                slotEl.innerHTML = `<span style="font-family: var(--brush-font); color: ${strokeColor}; font-weight: 900; line-height: 60px;">${char}</span>`;
+            };
+
+            if (typeof HanziWriter === 'undefined') {
+                renderBrushText();
+                return resolve();
+            }
+
+            let isFinished = false;
+
+            const timeoutId = setTimeout(() => {
+                if (!isFinished) {
+                    isFinished = true;
+                    renderBrushText();
+                    resolve();
+                }
+            }, 1500);
+
+            try {
+                const writer = HanziWriter.create(slotId, char, {
+                    width: 52,
+                    height: 52,
+                    padding: 2,
+                    showOutline: false,
+                    strokeColor: strokeColor,
+                    strokeAnimationSpeed: 2.2,
+                    delayBetweenStrokes: 10,
+                    onLoadCharDataError: function() {
+                        if (!isFinished) {
+                            isFinished = true;
+                            clearTimeout(timeoutId);
+                            renderBrushText();
+                            resolve();
+                        }
+                    }
+                });
+
+                writer.animateCharacter({
+                    onComplete: function() {
+                        if (!isFinished) {
+                            isFinished = true;
+                            clearTimeout(timeoutId);
+                            renderBrushText();
+                            resolve();
+                        }
+                    }
+                });
+            } catch (err) {
+                if (!isFinished) {
+                    isFinished = true;
+                    clearTimeout(timeoutId);
+                    renderBrushText();
+                    resolve();
+                }
+            }
+        });
+    }
+
+    async function animateHanja(targetHanja, strokeColor) {
+        for (let i = 0; i < 4; i++) {
+            await animateSingleChar(`slot-${i}`, targetHanja[i], strokeColor);
+        }
+    }
+
+    async function checkAnswer() {
+        if (isAnswered) return;
+        isAnswered = true;
+
+        const quiz = quizData[currentIdx];
+        const msg = document.getElementById('message');
+        const src = document.getElementById('source');
+        
+        src.innerText = quiz.source;
+
+        if (selectedHanja === quiz.hanja) {
+            correctCount++;
+            document.getElementById('correct-count').innerText = correctCount;
+            msg.innerHTML = `<span style="color:var(--success-color)">✨ 정답: ${quiz.read}</span><br>완벽합니다! (획순 쓰는 중...)`;
+            
+            for(let i=0; i<4; i++) {
+                document.getElementById(`slot-${i}`).style.borderBottomColor = "var(--success-color)";
+            }
+            
+            await animateHanja(quiz.hanja, '#27ae60');
+            msg.innerHTML = `<span style="color:var(--success-color)">✨ 정답: ${quiz.read}</span><br>완벽합니다!`;
+
+        } else {
+            wrongCount++;
+            document.getElementById('wrong-count').innerText = wrongCount;
+            msg.innerHTML = `<span style="color:var(--error-color)">❌ 오답입니다.</span><br>정답: ${quiz.hanja} (${quiz.read})`;
+            
+            for(let i=0; i<4; i++) {
+                const s = document.getElementById(`slot-${i}`);
+                s.style.color = "var(--error-color)";
+                s.style.borderBottomColor = "var(--error-color)";
+            }
+
+            setTimeout(async () => {
+                msg.innerHTML = `<span style="color:var(--error-color)">❌ 정답 획순 보기</span><br>정답: ${quiz.hanja} (${quiz.read})`;
+                await animateHanja(quiz.hanja, '#e74c3c');
+            }, 500);
+        }
+    }
+
+    window.onload = function() {
+        nextQuiz();
+    };
+</script>
+
+</body>
+</html>
